@@ -4,71 +4,53 @@
 
 def sum_prod_diags(matrix)
 
-    # turn the input into a Ruby matrix
     require 'matrix'
-    m = Matrix[*matrix]
     
-    # get the width / height of matrix
-    n = m.column(0).count
+    # ability to rotate nested array 90 degrees (for right - to left calc)
+    def rotate(matrix)
+      newMatrix, finalMatrix, i = [], [], 0
+      (matrix.length > matrix[0].length ? matrix.length : matrix[0].length).times do
+          matrix.map { |row| row[i] != nil ? newMatrix << row[i] : nil }
+          i+=1
+      end
+      newMatrix.each_slice(matrix.length).to_a.reverse
+    end
     
-    # create arrays to store values diagonal sums
-    d_sum = []
-    a_sum = []
-    
-    ## GET LEFT - RIGHT DIAGONALS
-      # get the diagonal and all lower diagonals
-      d = m
-      i = n
+    # get the diagonal and all lower diagonals
+    def diags_sum_array(matrix)
+      sum = []
+      length = matrix.column(0).count
+      
+      d = matrix
+      i = length
       while i > 0 do
         # multiply the values of the diagonal
-        d_sum << d.each(:diagonal).inject(:*)
+        sum << d.each(:diagonal).inject(:*)
         d = d.first_minor(0,(i-1))
         i -= 1
       end
       
       # get the upper diagonals
-      trans = m.transpose
-      y = n - 1
+      trans = matrix.transpose
+      y = length - 1
       while y > 0 do
         # multiply the values of the diagonal
         trans = trans.first_minor(0,(y))
-        d_sum << trans.each(:diagonal).inject(:*)
+        sum << trans.each(:diagonal).inject(:*)
         y -= 1
       end
+      
+      return sum
+      
+    end
+
+    # run for left to right calc
+    d_sum = diags_sum_array(Matrix[*matrix])
     
-    ## GET RIGHT - LEFT DIAGONALS
-      # rotate the original nested array 90 degrees
-      def rotate(matrix)
-        newMatrix, finalMatrix, i = [], [], 0
-        (matrix.length > matrix[0].length ? matrix.length : matrix[0].length).times do
-            matrix.map { |row| row[i] != nil ? newMatrix << row[i] : nil }
-            i+=1
-        end
-        newMatrix.each_slice(matrix.length).to_a.reverse
-      end
-      
-      l = Matrix[*rotate(matrix)]
-      # get the diagonal and all lower diagonals
-      d = l
-      i = n
-      while i > 0 do
-        # multiply the values of the diagonal
-        a_sum << d.each(:diagonal).inject(:*)
-        d = d.first_minor(0,(i-1))
-        i -= 1
-      end
-      
-      # get the upper diagonals
-      trans = l.transpose
-      y = n - 1
-      while y > 0 do
-        # multiply the values of the diagonal
-        trans = trans.first_minor(0,(y))
-        a_sum << trans.each(:diagonal).inject(:*)
-        y -= 1
-      end    
+    # run for right to left calc (using rotate array method)
+    a_sum = diags_sum_array(Matrix[*rotate(matrix)])
 
-
-      return d_sum.inject(:+) - a_sum.inject(:+)
-      
+    # add each result, return the difference in the two
+    return d_sum.inject(:+) - a_sum.inject(:+)
+    
 end
